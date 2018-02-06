@@ -3,4 +3,5 @@
     <string name="hello_world">参数设置</string>
     <string name="message">点击事件</string>
     <string name="my_analog_name">简单指针表盘</string>
+    <string name="title_activity_input_code">InputCodeActivity</string>
 </resources>

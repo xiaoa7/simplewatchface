@@ -1,8 +1,9 @@
 package org.p3p.wf.sawf;
 
-import android.app.Activity;
 import android.content.Context;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -22,7 +23,6 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -44,15 +44,28 @@ import java.util.Map;
 
 
 public class SettingActivity extends WearableActivity {
-    private final String config_url = "http://www.xiaoa7.xyz/mywatchface/config.json", bg_path = "http://www.xiaoa7.xyz/mywatchface/";
+    private final String baseurl = "http://www.xiaoa7.top:8080/res/bg/";
     private ListView listView;
     private MyAdapter adapter;
     private String currentSelectBg = null;
     private List<Map<String, Object>> listdata = new ArrayList<>();
     private static final int REQUEST = 112;
+    private String usercode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        SharedPreferences sp = getSharedPreferences("sp_sawf", Context.MODE_PRIVATE);
+        usercode = sp.getString("usercode", null);
+        if (usercode == null) {
+            Intent intent = new Intent();
+            intent.setClass(this, InputCodeActivity.class);
+            startActivity(intent);
+            this.finish();
+            return;
+        }
+
         setContentView(R.layout.activity_setting);
         listView = (ListView) findViewById(R.id.listView);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -65,12 +78,10 @@ public class SettingActivity extends WearableActivity {
         new MyTask().execute();
 
 
-
         setAmbientEnabled();
     }
 
     /**
-     *
      * @param context
      * @param permissions
      * @return
@@ -85,15 +96,16 @@ public class SettingActivity extends WearableActivity {
         }
         return true;
     }
+
     /**
      * @param v
      */
     public void onSave(View v) {
-        Toast.makeText(this,"准备下载背景图!",Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "准备下载背景图!", Toast.LENGTH_SHORT).show();
         if (Build.VERSION.SDK_INT >= 23) {
-            String[] PERMISSIONS = {android.Manifest.permission.READ_EXTERNAL_STORAGE,android.Manifest.permission.WRITE_EXTERNAL_STORAGE};
+            String[] PERMISSIONS = {android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE};
             if (!hasPermissions(this, PERMISSIONS)) {
-                ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST );
+                ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST);
             } else {
                 new DownloadBackgroundTask().execute();
             }
@@ -104,7 +116,7 @@ public class SettingActivity extends WearableActivity {
 
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,   String[] permissions,   int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case REQUEST: {
@@ -131,12 +143,10 @@ public class SettingActivity extends WearableActivity {
      * MyTask继承线程池AsyncTask用来网络数据请求、json解析、数据更新等操作。
      */
     class DownloadBackgroundTask extends AsyncTask<String, Void, String> {
-
-
         @Override
         protected String doInBackground(String... strings) {
             try {
-                downloadToFile(bg_path + currentSelectBg);
+                downloadToFile(baseurl + usercode + "/" + currentSelectBg);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -210,7 +220,7 @@ public class SettingActivity extends WearableActivity {
      * @return
      */
     private String RequestConfig() throws IOException {
-        URL url = new URL(config_url);
+        URL url = new URL(baseurl+usercode+"/config.json");
         HttpURLConnection urlConn = (HttpURLConnection) url.openConnection();
         urlConn.setConnectTimeout(5 * 1000);
         urlConn.setReadTimeout(5 * 1000);
@@ -259,14 +269,14 @@ public class SettingActivity extends WearableActivity {
 
         // 可以建立一个子目录专门存放自己专属文件
         File dir = new File(parent_path.getAbsoluteFile(), "samplewf");
-        if (!dir.exists()&&!dir.isDirectory()) {
+        if (!dir.exists() && !dir.isDirectory()) {
             dir.mkdir();
-        }else{
-            Log.d("mytag","表盘图片目录已经存在");
+        } else {
+            Log.d("mytag", "表盘图片目录已经存在");
         }
-        File file = new File(dir.getAbsoluteFile()+"/mywatchface.png");
-        if(!file.exists()){
-            Log.d("mytag",file.getAbsolutePath());
+        File file = new File(dir.getAbsoluteFile() + "/mywatchface.png");
+        if (!file.exists()) {
+            Log.d("mytag", file.getAbsolutePath());
             file.createNewFile();
         }
         //
@@ -326,7 +336,7 @@ public class SettingActivity extends WearableActivity {
             }
             holder.picname_hospital_s.setImageResource(R.drawable.bg_item_icon);
             //接口回调的方法，完成图片的读取;
-            DownImage downImage = new DownImage(bg_path + list.get(position).get("s_image").toString());
+            DownImage downImage = new DownImage(baseurl+usercode+"/" + list.get(position).get("s_image").toString());
             downImage.loadImage(new ImageCallBack() {
                 @Override
                 public void getDrawable(Drawable drawable) {

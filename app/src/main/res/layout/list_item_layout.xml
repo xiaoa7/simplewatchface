@@ -9,8 +9,8 @@ android:layout_height="match_parent"
 
 <ImageView
     android:id="@+id/image"
-    android:layout_width="72dp"
-    android:layout_height="72dp"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
     android:layout_alignParentLeft="true"
     android:src="@drawable/bg_item_icon"
     android:layout_margin="10dp" />

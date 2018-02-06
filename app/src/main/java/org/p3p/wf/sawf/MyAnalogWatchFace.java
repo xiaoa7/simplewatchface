@@ -112,7 +112,7 @@ public class MyAnalogWatchFace extends CanvasWatchFaceService {
 
         private static final float CENTER_GAP_AND_CIRCLE_RADIUS = 8f;
 
-        private static final int SHADOW_RADIUS = 12;
+        private static final int SHADOW_RADIUS = 6;
         /* Handler to update the time once a second in interactive mode. */
         private final Handler mUpdateTimeHandler = new EngineHandler(this);
         private Calendar mCalendar;
@@ -148,7 +148,6 @@ public class MyAnalogWatchFace extends CanvasWatchFaceService {
         private boolean mLowBitAmbient;
         private boolean mBurnInProtection;
         private long lasttaptime = 0;
-        private String back_ground_uri;
         private int default_widht, default_height;
 
         //
@@ -171,12 +170,27 @@ public class MyAnalogWatchFace extends CanvasWatchFaceService {
         private void loadBackgroundImage() {
             File file = new File(wf_dir, "mywatchface.png");
             Log.d("mytag", file.getAbsolutePath());
-            if (file.exists()) {
+            if (file.exists()&&file.canRead()) {
                 mBackgroundBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
             } else {
                 mBackgroundBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.bg);
             }
 
+            try {
+                Palette.from(mBackgroundBitmap).generate(new Palette.PaletteAsyncListener() {
+                    @Override
+                    public void onGenerated(Palette palette) {
+                        if (palette != null) {
+                            mWatchHandHighlightColor = palette.getVibrantColor(Color.RED);
+                            mWatchHandColor = palette.getLightVibrantColor(Color.WHITE);
+                            mWatchHandShadowColor = palette.getDarkMutedColor(Color.BLACK);
+                            updateWatchHandStyle();
+                        }
+                    }
+                });
+            }catch(Exception ex){
+                //
+            }
         }
 
 
@@ -185,17 +199,7 @@ public class MyAnalogWatchFace extends CanvasWatchFaceService {
             mBackgroundPaint.setColor(Color.BLACK);
             loadBackgroundImage();
             /* Extracts colors from background image to improve watchface style. */
-            Palette.from(mBackgroundBitmap).generate(new Palette.PaletteAsyncListener() {
-                @Override
-                public void onGenerated(Palette palette) {
-                    if (palette != null) {
-                        mWatchHandHighlightColor = palette.getVibrantColor(Color.RED);
-                        mWatchHandColor = palette.getLightVibrantColor(Color.WHITE);
-                        mWatchHandShadowColor = palette.getDarkMutedColor(Color.BLACK);
-                        updateWatchHandStyle();
-                    }
-                }
-            });
+
         }
 
         /**
